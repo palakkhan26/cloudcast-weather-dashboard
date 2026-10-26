@@ -1,0 +1,15 @@
+
+City,Date,Temperature,Humidity,WindSpeed,Condition
+Pune,2026-10-20,29,65,12,Cloudy
+Pune,2026-10-21,30,60,10,Sunny
+Pune,2026-10-22,28,72,15,Rainy
+Pune,2026-10-23,27,78,18,Rainy
+Pune,2026-10-24,29,68,11,Cloudy
+Mumbai,2026-10-20,31,75,14,Cloudy
+Mumbai,2026-10-21,32,70,12,Sunny
+Mumbai,2026-10-22,30,82,20,Rainy
+Delhi,2026-10-20,33,45,9,Sunny
+Delhi,2026-10-21,34,40,8,Sunny
+Delhi,2026-10-22,31,55,13,Cloudy
+
+

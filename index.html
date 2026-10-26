@@ -1,0 +1,557 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CloudCast | Cloud Weather Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 25px 16px;
+  font-family: "Times New Roman", Times, serif;
+  color: #f4f6ff;
+  background: #071426;
+}
+
+main {
+  max-width: 1000px;
+  margin: auto;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+header h1 {
+  font-size: 42px;
+  margin: 8px;
+  letter-spacing: 1px;
+  color: #d9e8ff;
+}
+
+header p,
+.small {
+  color: #a9bddb;
+  line-height: 1.5;
+}
+
+.search {
+  display: flex;
+  gap: 10px;
+  max-width: 600px;
+  margin: 20px auto;
+}
+
+input,
+button {
+  padding: 13px;
+  border: 1px solid #263e60;
+  border-radius: 8px;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+}
+
+input {
+  flex: 1;
+  min-width: 0;
+  color: #f4f6ff;
+  background: #101f36;
+}
+
+input::placeholder {
+  color: #9aacc5;
+}
+
+button {
+  background: #18365d;
+  color: #e5efff;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #254b79;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #9dc7ff;
+  outline-offset: 3px;
+}
+
+.panel {
+  background: #0d1d33;
+  border: 1px solid #203957;
+  border-radius: 16px;
+  padding: 22px;
+  margin: 18px 0;
+  box-shadow: 0 8px 25px #00000020;
+}
+
+.panel h2 {
+  color: #d9e8ff;
+}
+
+.current {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+#place {
+  color: #a9bddb;
+  font-size: 20px;
+}
+
+#temp {
+  font-size: 64px;
+  font-weight: bold;
+  margin: 12px 0;
+  color: #ffffff;
+}
+
+#condition {
+  color: #b9d6ff;
+}
+
+#icon {
+  font-size: 65px;
+}
+
+.metrics,
+.forecast {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.metric,
+.day {
+  background: #132743;
+  border: 1px solid #263e60;
+  padding: 17px 8px;
+  border-radius: 12px;
+  text-align: center;
+  color: #d9e8ff;
+}
+
+.metric b {
+  display: block;
+  font-size: 22px;
+  margin-top: 10px;
+  color: #ffffff;
+}
+
+.forecast {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.day .emoji {
+  font-size: 28px;
+  margin: 10px 0;
+}
+
+.day p {
+  color: #c3d7f5;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+  font-family: "Times New Roman", Times, serif;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid #263e60;
+}
+
+th {
+  color: #9dc7ff;
+  background: #132743;
+}
+
+td {
+  color: #e0e9f7;
+}
+
+tr:hover td {
+  background: #132743;
+}
+
+#weatherChart {
+  width: 100%;
+  max-height: 350px;
+}
+
+#status {
+  text-align: center;
+  min-height: 24px;
+  color: #b9d6ff;
+}
+
+footer {
+  text-align: center;
+  color: #8fa8c9;
+  font-size: 14px;
+  margin: 25px;
+  line-height: 1.8;
+}
+
+@media (max-width: 520px) {
+  .forecast {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .metrics {
+    gap: 7px;
+  }
+
+  .metric {
+    padding: 13px 4px;
+  }
+
+  .metric b {
+    font-size: 18px;
+  }
+
+  #temp {
+    font-size: 48px;
+  }
+
+  .panel {
+    padding: 16px;
+  }
+
+  header h1 {
+    font-size: 34px;
+  }
+
+  .search button {
+    padding: 10px;
+    font-size: 15px;
+  }
+}
+</style>
+</head>
+
+<body>
+<main>
+
+<header>
+  <h1>☁️ CloudCast</h1>
+  <p>Cloud-Based Weather Monitoring and Forecast Dashboard</p>
+</header>
+
+<form class="search" id="searchForm">
+  <input
+    id="city"
+    value="Pune"
+    placeholder="Enter city name..."
+    aria-label="Enter city name"
+    required
+  >
+  <button type="submit">Search Weather</button>
+</form>
+
+<p id="status" role="status" aria-live="polite">
+  Loading weather data...
+</p>
+
+<section class="panel current">
+  <div>
+    <p id="place">Pune, India</p>
+    <div id="temp">--°C</div>
+    <h2 id="condition">Loading...</h2>
+    <p id="updated" class="small">Live weather data</p>
+  </div>
+  <div id="icon" aria-hidden="true">🌤️</div>
+</section>
+
+<section class="panel">
+  <h2>📊 Current Weather Details</h2>
+  <div class="metrics">
+    <div class="metric">
+      🌡️ Feels Like
+      <b id="feels">--°C</b>
+    </div>
+    <div class="metric">
+      💧 Humidity
+      <b id="humidity">--%</b>
+    </div>
+    <div class="metric">
+      💨 Wind Speed
+      <b id="wind">-- km/h</b>
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>📅 Five-Day Weather Forecast</h2>
+  <div id="forecast" class="forecast"></div>
+</section>
+
+<section class="panel">
+  <h2>📈 Temperature Analysis</h2>
+  <p class="small">
+    Daily maximum and minimum forecast temperatures
+  </p>
+  <canvas id="weatherChart"></canvas>
+</section>
+
+<section class="panel">
+  <h2>🗂️ Weather Dataset</h2>
+  <p class="small">
+    Illustrative sample dataset for demonstration and analysis.
+    These are sample records, not verified historical observations.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>City</th>
+          <th>Date</th>
+          <th>Temperature °C</th>
+          <th>Humidity %</th>
+          <th>Wind km/h</th>
+          <th>Condition</th>
+        </tr>
+      </thead>
+      <tbody id="dataset"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  CloudCast | Cloud Computing Mini Project<br>
+  Live Weather: Open-Meteo API | Hosting: Vercel
+</footer>
+
+</main>
+
+<script>
+const weatherDataset = [
+  {city:"Pune",date:"2026-10-20",temp:29,humidity:65,wind:12,condition:"Cloudy"},
+  {city:"Pune",date:"2026-10-21",temp:30,humidity:60,wind:10,condition:"Sunny"},
+  {city:"Pune",date:"2026-10-22",temp:28,humidity:72,wind:15,condition:"Rainy"},
+  {city:"Pune",date:"2026-10-23",temp:27,humidity:78,wind:18,condition:"Rainy"},
+  {city:"Pune",date:"2026-10-24",temp:29,humidity:68,wind:11,condition:"Cloudy"},
+  {city:"Mumbai",date:"2026-10-20",temp:31,humidity:75,wind:14,condition:"Cloudy"},
+  {city:"Mumbai",date:"2026-10-21",temp:32,humidity:70,wind:12,condition:"Sunny"},
+  {city:"Mumbai",date:"2026-10-22",temp:30,humidity:82,wind:20,condition:"Rainy"},
+  {city:"Delhi",date:"2026-10-20",temp:33,humidity:45,wind:9,condition:"Sunny"},
+  {city:"Delhi",date:"2026-10-21",temp:34,humidity:40,wind:8,condition:"Sunny"},
+  {city:"Delhi",date:"2026-10-22",temp:31,humidity:55,wind:13,condition:"Cloudy"}
+];
+
+const $ = id => document.getElementById(id);
+let weatherChart;
+
+function showDataset() {
+  $("dataset").innerHTML = weatherDataset.map(r => `
+    <tr>
+      <td>${r.city}</td>
+      <td>${r.date}</td>
+      <td>${r.temp}</td>
+      <td>${r.humidity}</td>
+      <td>${r.wind}</td>
+      <td>${r.condition}</td>
+    </tr>
+  `).join("");
+}
+
+showDataset();
+
+function weatherInfo(code) {
+  if (code === 0) return ["Clear Sky","☀️"];
+  if (code <= 2) return ["Partly Cloudy","🌤️"];
+  if (code === 3) return ["Cloudy","☁️"];
+  if (code <= 48) return ["Foggy","🌫️"];
+  if (code <= 57) return ["Drizzle","🌦️"];
+  if (code <= 67) return ["Rain","🌧️"];
+  if (code <= 77) return ["Snow","❄️"];
+  if (code <= 82) return ["Rain Showers","🌦️"];
+  if (code <= 86) return ["Snow Showers","🌨️"];
+  return ["Thunderstorm","⛈️"];
+}
+
+async function loadWeather(city) {
+  $("status").textContent = "Searching for " + city + "...";
+
+  try {
+    const geoURL =
+      "https://geocoding-api.open-meteo.com/v1/search?name=" +
+      encodeURIComponent(city) +
+      "&count=1&language=en&format=json";
+
+    const geoResponse = await fetch(geoURL);
+
+    if (!geoResponse.ok) {
+      throw Error("City search failed.");
+    }
+
+    const geo = await geoResponse.json();
+
+    if (!geo.results || !geo.results.length) {
+      throw Error("City not found. Please try another name.");
+    }
+
+    const loc = geo.results[0];
+
+    const url =
+      "https://api.open-meteo.com/v1/forecast?latitude=" +
+      loc.latitude +
+      "&longitude=" +
+      loc.longitude +
+      "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m" +
+      "&daily=weather_code,temperature_2m_max,temperature_2m_min" +
+      "&forecast_days=5&timezone=auto";
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw Error("Weather API request failed.");
+    }
+
+    const data = await response.json();
+
+    if (!data.current || !data.daily) {
+      throw Error("Weather data is unavailable.");
+    }
+
+    const c = data.current;
+    const info = weatherInfo(c.weather_code);
+
+    $("place").textContent = loc.name + ", " + (loc.country || "");
+    $("temp").textContent = Math.round(c.temperature_2m) + "°C";
+    $("condition").textContent = info[0];
+    $("icon").textContent = info[1];
+    $("feels").textContent = Math.round(c.apparent_temperature) + "°C";
+    $("humidity").textContent = c.relative_humidity_2m + "%";
+    $("wind").textContent = c.wind_speed_10m + " km/h";
+    $("updated").textContent =
+      "Data time: " + c.time.replace("T", " ");
+
+    $("forecast").innerHTML = data.daily.time.map((date, i) => {
+      const w = weatherInfo(data.daily.weather_code[i]);
+      const d = new Date(date + "T12:00:00");
+
+      return `
+        <div class="day">
+          <b>${d.toLocaleDateString("en", {weekday:"short"})}</b>
+          <div class="emoji">${w[1]}</div>
+          <div>${w[0]}</div>
+          <p>
+            <b>${Math.round(data.daily.temperature_2m_max[i])}°</b>
+            / ${Math.round(data.daily.temperature_2m_min[i])}°
+          </p>
+        </div>
+      `;
+    }).join("");
+
+    const labels = data.daily.time.map(date =>
+      new Date(date + "T12:00:00").toLocaleDateString(
+        "en", {weekday:"short"}
+      )
+    );
+
+    if (weatherChart) {
+      weatherChart.destroy();
+    }
+
+    weatherChart = new Chart($("weatherChart"), {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "Maximum Temperature °C",
+            data: data.daily.temperature_2m_max,
+            borderColor: "#8dbbff",
+            backgroundColor: "#8dbbff22",
+            pointBackgroundColor: "#8dbbff",
+            tension: 0.35
+          },
+          {
+            label: "Minimum Temperature °C",
+            data: data.daily.temperature_2m_min,
+            borderColor: "#d4b8ff",
+            backgroundColor: "#d4b8ff22",
+            pointBackgroundColor: "#d4b8ff",
+            tension: 0.35
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            labels: {
+              color: "#e0e9f7",
+              font: {
+                family: "Times New Roman",
+                size: 14
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            ticks: {
+              color: "#d9e8ff",
+              font: {family:"Times New Roman"}
+            },
+            grid: {color:"#263e604f"}
+          },
+          x: {
+            ticks: {
+              color: "#d9e8ff",
+              font: {family:"Times New Roman"}
+            },
+            grid: {color:"#263e604f"}
+          }
+        }
+      }
+    });
+
+    $("status").textContent = "Live weather loaded successfully ✓";
+
+  } catch (err) {
+    $("status").textContent =
+      (err.message || "Could not load weather.") +
+      " Check your internet connection and try again.";
+  }
+}
+
+$("searchForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const city = $("city").value.trim();
+  if (city) loadWeather(city);
+});
+
+loadWeather("Pune");
+</script>
+</body>
+</html>
+
+
